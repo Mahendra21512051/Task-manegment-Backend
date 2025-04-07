@@ -41,15 +41,15 @@ const app = express();
 connectDB();
 
 // ✅ CORS Configuration
-app.use(
-  cors({
-    origin: "https://task-manegment-frontend.vercel.app",
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    credentials: true,
-  })
-);
-app.options("*", cors());
+const corsOptions = {
+  origin: "https://task-manegment-frontend-qfpsugz6e.vercel.app", // 🔁 replace with your frontend Vercel URL
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: true, // optional — only if using cookies/auth headers
+};
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // handle preflight
 
+// ✅ Middleware
 app.use(express.json());
 
 // ✅ Routes
@@ -59,7 +59,10 @@ app.use("/clustertaskmanagment/categorymanegment", categoryRoutes);
 app.use("/clustertaskmanagment/taskmanegment", taskRoutes);
 app.use("/clustertaskmanagment", authRoutes);
 
-// ✅ Port setup
+// ✅ Server listener
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => console.log(`✅ Server is running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`✅ Server is running on port ${PORT}`);
+});
+
 
