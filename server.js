@@ -39,11 +39,23 @@ const connectionRoutes = require("./Routes/connectionRoutes");
 const app = express();
 connectDB();
 
-// ✅ Configure CORS to allow your frontend domain
+// ✅ Allow list for main frontend and dev URLs
+const allowedOrigins = [
+  "https://task-manegment-frontend.vercel.app",
+  "http://localhost:3000"
+];
+
+// ✅ Dynamic CORS configuration
 app.use(cors({
-  origin: "https://task-manegment-frontend.vercel.app", // 👈 your frontend on Vercel
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin) || origin.endsWith(".vercel.app")) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  credentials: true, // 👈 if you're using cookies/auth headers
+  credentials: true,
 }));
 
 // ✅ Handle preflight requests
@@ -51,12 +63,21 @@ app.options("*", cors());
 
 app.use(express.json());
 
-// Routes
+// ✅ Routes
 app.use("/clustertaskmanagment/shareTaskmanegment", shareTaskRoutes); 
 app.use("/clustertaskmanagment/connectionmanegment", connectionRoutes);
 app.use("/clustertaskmanagment/categorymanegment", categoryRoutes);
 app.use("/clustertaskmanagment/taskmanegment", taskRoutes);
 app.use("/clustertaskmanagment", authRoutes);
 
+// ✅ Error handling middleware (for CORS & others)
+app.use((err, req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.status(err.status || 500).json({
+    error: err.message || "Something went wrong",
+  });
+});
+
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server is running on port ${PORT}`));
+
