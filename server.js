@@ -39,45 +39,50 @@ const connectionRoutes = require("./Routes/connectionRoutes");
 const app = express();
 connectDB();
 
-// ✅ Allow list for main frontend and dev URLs
+// ✅ Use this CORS config
 const allowedOrigins = [
   "https://task-manegment-frontend.vercel.app",
   "http://localhost:3000"
 ];
 
-// ✅ Dynamic CORS configuration
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin) || origin.endsWith(".vercel.app")) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  credentials: true,
-}));
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
 
-// ✅ Handle preflight requests
-app.options("*", cors());
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+
+  // ✅ Respond to preflight requests
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
+  next();
+});
 
 app.use(express.json());
 
-// ✅ Routes
+// ✅ API routes
 app.use("/clustertaskmanagment/shareTaskmanegment", shareTaskRoutes); 
 app.use("/clustertaskmanagment/connectionmanegment", connectionRoutes);
 app.use("/clustertaskmanagment/categorymanegment", categoryRoutes);
 app.use("/clustertaskmanagment/taskmanegment", taskRoutes);
 app.use("/clustertaskmanagment", authRoutes);
 
-// ✅ Error handling middleware (for CORS & others)
+// ✅ Default error handler
 app.use((err, req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
+  console.error("Error:", err);
   res.status(err.status || 500).json({
-    error: err.message || "Something went wrong",
+    success: false,
+    message: err.message || "Something went wrong",
   });
 });
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => console.log(`🚀 Server is running on port ${PORT}`));
+
 
